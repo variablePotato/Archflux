@@ -1,0 +1,34 @@
+{
+  "name": "archflux",
+  "version": "1.0.0",
+  "description": "Production-grade Layer 7 API Gateway built in Node.js (ESM)",
+  "main": "src/gateway/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/gateway/server.js",
+    "dev": "nodemon src/gateway/server.js",
+    "test": "npx --node-options=\"--experimental-vm-modules\" jest --detectOpenHandles",
+    "benchmark": "node scripts/benchmark.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.5",
+    "pino": "^9.0.0",
+    "pino-http": "^9.0.0",
+    "prom-client": "^15.1.2",
+    "undici": "^6.19.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "autocannon": "^8.0.0",
+    "jest": "^30.4.2",
+    "nodemon": "^3.1.0",
+    "pino-pretty": "^11.0.0",
+    "supertest": "^7.0.0"
+  }
+}

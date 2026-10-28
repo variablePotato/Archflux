@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gateway_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: gateway_db
+      POSTGRES_USER: gateway_user
+      POSTGRES_PASSWORD: gateway_password
+    ports:
+      - "5432:5432"
+    networks:
+      - gateway_net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gateway_user -d gateway_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: gateway_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - gateway_net
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: user_service
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      LOG_LEVEL: info
+    networks:
+      - gateway_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  product-service:
+    build:
+      context: ./services/product-service
+      dockerfile: Dockerfile
+    container_name: product_service
+    restart: always
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      NODE_ENV: production
+      LOG_LEVEL: info
+    networks:
+      - gateway_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3002/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    container_name: order_service
+    restart: always
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      NODE_ENV: production
+      LOG_LEVEL: info
+    networks:
+      - gateway_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3003/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      NODE_ENV: production
+      LOG_LEVEL: info
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: gateway_db
+      POSTGRES_USER: gateway_user
+      POSTGRES_PASSWORD: gateway_password
+    networks:
+      - gateway_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+
+networks:
+  gateway_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Gateway Dashboard & Control Plane</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo-icon">⚡</div>
+        <div class="brand-text">
+          <h2>API Gateway</h2>
+          <span class="version-tag">Control Dashboard</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="overview">
+          <span class="icon">📊</span> Overview
+        </button>
+        <button class="nav-item" data-tab="services">
+          <span class="icon">🟢</span> Microservices
+        </button>
+        <button class="nav-item" data-tab="explorer">
+          <span class="icon">🚀</span> API Explorer
+        </button>
+        <button class="nav-item" data-tab="routes">
+          <span class="icon">🛤️</span> Route Manager
+        </button>
+        <button class="nav-item" data-tab="metrics">
+          <span class="icon">📈</span> Prometheus Metrics
+        </button>
+      </nav>
+
+      <div class="system-status-widget">
+        <div class="status-indicator online"></div>
+        <div class="status-info">
+          <span class="label">Gateway Engine</span>
+          <span class="val">OPERATIONAL</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-title">
+          <h1 id="tab-title">System Overview</h1>
+          <p id="tab-subtitle">Real-time telemetry and microservices execution matrix</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-outline" id="btn-refresh">
+            <span class="icon">🔄</span> Auto-Refresh (Active)
+          </button>
+          <span class="timestamp" id="last-updated">Updated: Just now</span>
+        </div>
+      </header>
+
+      <!-- TAB 1: OVERVIEW -->
+      <section class="tab-content active" id="tab-overview">
+        <!-- Stat Cards Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Gateway Port</span>
+              <span class="stat-icon">🌐</span>
+            </div>
+            <div class="stat-value">8000</div>
+            <div class="stat-meta text-success">● High-Throughput Proxy</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Active Services</span>
+              <span class="stat-icon">🧩</span>
+            </div>
+            <div class="stat-value" id="stat-active-services">3 / 3</div>
+            <div class="stat-meta text-success">● All Nodes Healthy</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Circuit Breaker</span>
+              <span class="stat-icon">🛡️</span>
+            </div>
+            <div class="stat-value text-accent" id="stat-circuit">CLOSED</div>
+            <div class="stat-meta">● Fail-Safe Active</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Rate Limiter</span>
+              <span class="stat-icon">⚡</span>
+            </div>
+            <div class="stat-value">Redis Lua</div>
+            <div class="stat-meta">● Sliding Window ZSET</div>
+          </div>
+        </div>
+
+        <!-- Live Services Quick Grid -->
+        <div class="section-container">
+          <h3 class="section-title">Microservices Topology Status</h3>
+          <div class="services-grid" id="quick-services-grid">
+            <!-- Dynamically Rendered -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: MICROSERVICES -->
+      <section class="tab-content" id="tab-services">
+        <div class="services-grid" id="full-services-grid">
+          <!-- Dynamically Rendered -->
+        </div>
+      </section>
+
+      <!-- TAB 3: API EXPLORER -->
+      <section class="tab-content" id="tab-explorer">
+        <div class="explorer-container">
+          <div class="explorer-card">
+            <h3>Interactive API Tester</h3>
+            <p>Send live HTTP requests through the API Gateway (Port 8000) and observe response payload, headers, and propagation metrics.</p>
+
+            <div class="request-bar">
+              <select id="req-method" class="select-input">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+              </select>
+              <input type="text" id="req-url" class="text-input" value="/api/users/users" placeholder="/api/users/users">
+              <button class="btn btn-primary" id="btn-send-req">Send Request 🚀</button>
+            </div>
+
+            <div class="quick-presets">
+              <span class="preset-label">Quick Test Endpoints:</span>
+              <button class="preset-btn" data-url="/api/users/users" data-method="GET">User List</button>
+              <button class="preset-btn" data-url="/api/products/products" data-method="GET">Product Catalog</button>
+              <button class="preset-btn" data-url="/api/orders/orders" data-method="GET">Order List</button>
+              <button class="preset-btn" data-url="/admin/routes" data-method="GET">Gateway Routes</button>
+              <button class="preset-btn" data-url="/metrics" data-method="GET">Prometheus Metrics</button>
+            </div>
+
+            <div class="response-section">
+              <div class="response-header">
+                <span class="res-status" id="res-status-badge">Status: Waiting</span>
+                <span class="res-time" id="res-time-badge">Time: 0ms</span>
+              </div>
+
+              <div class="response-headers-box" id="res-headers-box">
+                <!-- Response Headers Injection -->
+              </div>
+
+              <div class="code-editor-box">
+                <pre><code id="res-json-display">// Response JSON will be formatted here</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: ROUTE MANAGER -->
+      <section class="tab-content" id="tab-routes">
+        <div class="section-container">
+          <div class="flex-between">
+            <h3 class="section-title">Active Gateway Route Table</h3>
+            <button class="btn btn-outline" id="btn-reload-routes">Refresh Routes Table</button>
+          </div>
+
+          <div class="table-card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Route ID</th>
+                  <th>Path Prefix</th>
+                  <th>Target Downstream URL</th>
+                  <th>Strip Prefix</th>
+                  <th>Auth Strategy</th>
+                  <th>Rate Limit</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="routes-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: PROMETHEUS METRICS -->
+      <section class="tab-content" id="tab-metrics">
+        <div class="metrics-container">
+          <div class="metrics-header flex-between">
+            <h3>Scraped Prometheus Raw Data (/metrics)</h3>
+            <button class="btn btn-primary" id="btn-fetch-metrics">Fetch Metrics Data</button>
+          </div>
+          <div class="code-editor-box large">
+            <pre><code id="raw-metrics-display">Click "Fetch Metrics Data" to load raw scrapable metrics...</code></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
